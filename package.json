@@ -1,0 +1,15 @@
+{
+    "name": "docling-server",
+    "version": "1.0.0",
+    "description": "Service for processing documents using docling CLI",
+    "main": "docling-server.js",
+    "scripts": {
+        "start": "node docling-server.js"
+    },
+    "dependencies": {
+        "express": "^4.18.2",
+        "axios": "^1.6.2",
+        "chokidar": "^3.5.3",
+        "uuid": "^9.0.1"
+    }
+}

@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  docling:
+    build: .
+    container_name: paperless-docling
+    ports:
+      - "3000:3000"
+    volumes:
+      - /tmp:/tmp
+      - ./processing:/app/processing
+    env_file:
+      - .env
+    environment:
+      - PAPERLESS_API_URL=${PAPERLESS_API_URL:?PAPERLESS_API_URL is required}
+      - PAPERLESS_AUTH=${PAPERLESS_AUTH:?PAPERLESS_AUTH is required}
+      - TAG_NAME=${TAG_NAME:?TAG_NAME is required}
+      - CHECK_INTERVAL=${CHECK_INTERVAL:?CHECK_INTERVAL is required}
+      - DOCLING_PIPELINE=${DOCLING_PIPELINE:?DOCLING_PIPELINE is required}
+      - DOCLING_MODEL=${DOCLING_MODEL:?DOCLING_MODEL is required}
+      - DOCLING_DEVICE=${DOCLING_DEVICE:?DOCLING_DEVICE is required}
+      - DOCLING_THREADS=${DOCLING_THREADS:?DOCLING_THREADS is required}
+      - DOCLING_PDF_BACKEND=${DOCLING_PDF_BACKEND:?DOCLING_PDF_BACKEND is required}
+      - DOCLING_EXTRA_ARGS=${DOCLING_EXTRA_ARGS:-}
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu] 
