@@ -15,9 +15,9 @@ A service that automatically processes documents in Paperless using docling and 
 ## Prerequisites
 
 - Docker and Docker Compose
-- NVIDIA GPU with proper drivers and nvidia-docker2 installed
+- NVIDIA GPU with proper drivers and nvidia-docker2 installed (for GPU acceleration)
 - Access to Paperless API
-- A tag in your Paperless instance (default: "gpt-ocr-auto")
+- A tag in your Paperless instance (default: "docling")
 
 ## Installation
 
@@ -31,6 +31,11 @@ A service that automatically processes documents in Paperless using docling and 
    ```bash
    docker-compose up -d
    ```
+   
+   Or for GPU-accelerated processing:
+   ```bash
+   docker-compose -f docker-compose.cuda.yml up -d
+   ```
 
 ## Configuration
 
@@ -40,34 +45,35 @@ The service can be configured through environment variables:
 
 These are mandatory:
 
-| Variable | Description |
-|----------|-------------|
-| `PAPERLESS_API_URL` | URL of your Paperless instance API |
-| `PAPERLESS_AUTH` | Basic authentication token (base64 encoded `username:password`) |
+| Variable            | Description                                                     |
+| ------------------- | --------------------------------------------------------------- |
+| `PAPERLESS_API_URL` | URL of your Paperless instance API                              |
+| `PAPERLESS_AUTH`    | Basic authentication token (base64 encoded `username:password`) |
 
 ### Tag Processing Settings
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `TAG_NAME` | Name of the tag to look for in Paperless | docling |
+| Variable         | Description                                         | Default          |
+| ---------------- | --------------------------------------------------- | ---------------- |
+| `TAG_NAME`       | Name of the tag to look for in Paperless            | docling          |
 | `CHECK_INTERVAL` | Interval in milliseconds to check for new documents | 60000 (1 minute) |
 
 ### Docling Settings
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DOCLING_PIPELINE` | The pipeline to use with docling | vlm |
-| `DOCLING_MODEL` | The model to use with docling | smoldocling |
-| `DOCLING_DEVICE` | The device to use (cuda, cpu) | cuda |
-| `DOCLING_THREADS` | Number of threads to use | 32 |
-| `DOCLING_PDF_BACKEND` | PDF backend to use | dlparse_v4 |
-| `DOCLING_EXTRA_ARGS` | Any additional arguments to pass to docling | (empty) |
+| Variable              | Description                                 | Default     |
+| --------------------- | ------------------------------------------- | ----------- |
+| `DOCLING_PIPELINE`    | The pipeline to use with docling            | vlm         |
+| `DOCLING_MODEL`       | The model to use with docling               | smoldocling |
+| `DOCLING_DEVICE`      | The device to use (cuda, cpu)               | cuda        |
+| `DOCLING_THREADS`     | Number of threads to use                    | 32          |
+| `DOCLING_PDF_BACKEND` | PDF backend to use                          | dlparse_v4  |
+| `DOCLING_OCR_ENGINE`  | OCR engine to use                           | easyocr     |
+| `DOCLING_EXTRA_ARGS`  | Any additional arguments to pass to docling | (empty)     |
 
 ### Server Settings
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | The port on which the API server listens | 3000 |
+| Variable | Description                              | Default |
+| -------- | ---------------------------------------- | ------- |
+| `PORT`   | The port on which the API server listens | 3000    |
 
 ## Usage
 
@@ -87,8 +93,8 @@ These are mandatory:
 ## Workflow
 
 1. The service finds documents with the configured tag
-2. Each document is downloaded to a temporary location
-3. Docling processes the document to extract content
+2. It adds the documents to a processing queue
+3. Each document is processed by docling to extract content
 4. The document's content is updated in Paperless
 5. The tag is removed from the document
 6. Temporary files are cleaned up
@@ -116,9 +122,30 @@ To make changes to the code:
    docker-compose up --build
    ```
 
+For development with automatic reloading:
+```bash
+npm run dev
+```
+
+## Project Structure
+
+- `docling-server.js`: Main server implementation
+- `Dockerfile`: Docker container definition
+- `docker-compose.yml`: Standard Docker Compose configuration
+- `docker-compose.cuda.yml`: GPU-enabled Docker Compose configuration
+- `.env.example`: Example environment configuration
+- `package.json`: Node.js dependencies
+
+## Dependencies
+
+- Express.js: Web server framework
+- Axios: HTTP client for API requests
+- UUID: For generating unique identifiers
+- Docling: Document processing tool (installed in the Docker container)
+
 ## Security Note
 
 The `.env` file contains sensitive credentials. Make sure to:
 - Add `.env` to your `.gitignore`
 - Use secure credentials
-- Limit access to the server running this service 
+- Limit access to the server running this service

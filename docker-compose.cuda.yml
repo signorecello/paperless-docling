@@ -8,7 +8,6 @@ services:
       - "3000:3000"
     volumes:
       - /tmp:/tmp
-      # - models:$HOME/.cache/docling/models
       - ./processing:/app/processing
     env_file:
       - .env
@@ -25,6 +24,10 @@ services:
       - DOCLING_OCR_ENGINE=${DOCLING_OCR_ENGINE}
       - DOCLING_EXTRA_ARGS=${DOCLING_EXTRA_ARGS}
     restart: unless-stopped
-
-# volumes:
-#   models:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu] 

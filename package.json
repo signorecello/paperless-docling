@@ -4,7 +4,8 @@
     "description": "Service for processing documents using docling CLI",
     "main": "docling-server.js",
     "scripts": {
-        "start": "node docling-server.js"
+        "start": "bun run docling-server.js",
+        "dev": "bun --watch run docling-server.js"
     },
     "dependencies": {
         "express": "^4.18.2",
