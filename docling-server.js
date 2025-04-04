@@ -153,6 +153,8 @@ async function processDocument(document) {
 
 		console.log(`Running docling command: ${doclingCommand}`);
 
+		const start = Date.now();
+
 		await new Promise((resolve, reject) => {
 			exec(doclingCommand, (error, stdout, stderr) => {
 				if (error) {
@@ -164,6 +166,9 @@ async function processDocument(document) {
 				resolve(stdout);
 			});
 		});
+
+		const end = Date.now();
+		console.log(`Docling took ${end - start}ms`);
 
 		// Read the generated markdown file
 		const files = await fs.readdir(outputDir);
@@ -231,11 +236,18 @@ async function processNextDocument() {
 
 	isProcessing = true;
 	const document = processingQueue.shift();
-	await processDocument(document);
-	isProcessing = false;
-
-	// Process next document if available
-	processNextDocument();
+	try {
+		await processDocument(document);
+	} catch (error) {
+		console.error(
+			`Error in processNextDocument for document ${document.id}:`,
+			error
+		);
+	} finally {
+		isProcessing = false;
+		// Process next document if available
+		processNextDocument();
+	}
 }
 
 async function checkForNewDocuments() {
@@ -269,7 +281,15 @@ async function initializeService() {
 	await findTargetTag();
 
 	// Check for new documents at the configured interval
-	setInterval(checkForNewDocuments, CHECK_INTERVAL);
+	setInterval(async () => {
+		await checkForNewDocuments();
+
+		// Ensure queue processing continues even if there was an error
+		if (!isProcessing && processingQueue.length > 0) {
+			console.log("Restarting processing after interval check");
+			processNextDocument();
+		}
+	}, CHECK_INTERVAL);
 
 	// Initial check
 	checkForNewDocuments();
